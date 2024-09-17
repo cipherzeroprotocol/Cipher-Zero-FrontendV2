@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table";
 import useReceivedFilesManagementLogic from "./ReceivedFilesManagement.logic";
 import { Button } from "@/components/ui/button";
-import { CopyIcon } from "lucide-react";
 import TableFromCell from "./TableFromCell";
 
 export default function ReceivedFilesManagement() {

@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UploadIcon } from "lucide-react";
 import SentDataManagement from "../SentDataManagement";
 import ReceivedFilesManagement from "../ReceivedFilesManagement";
+import FileInput from "./FileInput";
 
 export default function DataManagement() {
   return (
@@ -42,26 +42,20 @@ export default function DataManagement() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="send">
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-12 text-center">
-              <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Drag and drop files here or click to upload
-              </p>
-              <Button className="mt-4">
-                <UploadIcon className="mr-2 h-4 w-4" /> Upload Files
-              </Button>
-            </div>
-            <div className="mt-6 flex flex-col gap-3">
-              <Input placeholder="Recipient's address" />
+            <div className="flex flex-col gap-4">
+              <div className="mt-6 flex flex-col gap-3">
+                <Input placeholder="Recipient's address" />
+              </div>
+              <FileInput />
               <div className="flex items-center space-x-2">
                 <Input type="checkbox" id="encrypt" className="w-4 h-4 ml-1" />
                 <label htmlFor="encrypt" className="text-sm">
                   Encrypt data
                 </label>
               </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button>Send</Button>
+              <div className="mt-4 flex justify-end">
+                <Button>Send</Button>
+              </div>
             </div>
           </TabsContent>
           <TabsContent value="sent">

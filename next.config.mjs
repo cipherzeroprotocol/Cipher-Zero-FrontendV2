@@ -10,6 +10,11 @@ const nextConfig = {
       },
     ],
   },
+  publicRuntimeConfig: {
+    // Will be available on both server and client
+    RPC_BASE_URL: process.env.NEXT_PUBLIC_RPC_BASE_URL,
+    RPC_API_KEY: process.env.NEXT_PUBLIC_RPC_API_KEY,
+  },
 };
 
 export default nextConfig;
