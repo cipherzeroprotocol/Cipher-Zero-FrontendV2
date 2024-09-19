@@ -8,6 +8,9 @@ import pako from "pako";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { convertFileToBase64 } from "@/helpers/data-conversions";
+import { InputWithLabel } from "@/views/common/InputWithLabel";
+import TextAreaWithLabel from "@/views/common/TextAreaWithLabel";
+import MediaSendButton from "./MediaSendButton";
 
 const encryptionKey = "ab!k@Lr";
 
@@ -118,15 +121,18 @@ export default function FileInput() {
   }, []);
 
   return (
-    <>
+    <div className="flex flex-col gap-8 ">
       <div
-        className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-12 text-center"
+        className="border-2 border-dashed border-file-upload-border rounded-lg p-12 mt-6 text-center cursor-pointer"
         onClick={handleFileUpload}
       >
         <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Drag and drop files here or click to upload
-        </p>
+        <div>
+          <p className="font-semibold text-lg text-gray-600 dark:text-gray-400">
+            Drag and drop files here or{" "}
+            <span className="text-primary underline">click to upload</span>
+          </p>
+        </div>
         <input
           type="file"
           ref={inputFile}
@@ -165,6 +171,15 @@ export default function FileInput() {
           </p>
         </div>
       )}
-    </>
+
+      <InputWithLabel
+        id="recipientAddress"
+        label="Recipient's address"
+        type="text"
+        placeholder="Enter the recipient's address"
+      />
+      <TextAreaWithLabel id="note" label="Note" placeholder="Write a note..." />
+      <MediaSendButton />
+    </div>
   );
 }

@@ -1,46 +1,47 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SentDataManagement from "../SentDataManagement";
 import ReceivedFilesManagement from "../ReceivedFilesManagement";
-import FileInput from "./FileInput";
+import FileInput from "../DataTransfer/MediaTransfer/FileInput";
 
 export default function DataManagement() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Data Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="send">
-          <TabsList className="grid w-full grid-cols-4">
+    <Tabs defaultValue="send" className="flex flex-col gap-3">
+      <Card className="border-none">
+        <CardContent>
+          <TabsList className="grid w-full grid-cols-3 p-0 bg-card">
             <TabsTrigger
               value="send"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-tabs-trigger"
             >
-              Send
+              Data Transfer
             </TabsTrigger>
             <TabsTrigger
               value="sent"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-tabs-trigger"
             >
-              Sent Data
+              Messages
             </TabsTrigger>
             <TabsTrigger
               value="received"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-tabs-trigger"
             >
-              Received
+              My Wallet
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="requests"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-tabs-trigger"
             >
               Requests
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
+        </CardContent>
+      </Card>
+      <Card className="border-none">
+        <CardContent>
           <TabsContent value="send">
             <div className="flex flex-col gap-4">
               <div className="mt-6 flex flex-col gap-3">
@@ -54,7 +55,7 @@ export default function DataManagement() {
                 </label>
               </div>
               <div className="mt-4 flex justify-end">
-                <Button>Send</Button>
+                <Button>Send File</Button>
               </div>
             </div>
           </TabsContent>
@@ -98,8 +99,8 @@ export default function DataManagement() {
               </div>
             </ScrollArea>
           </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Tabs>
   );
 }

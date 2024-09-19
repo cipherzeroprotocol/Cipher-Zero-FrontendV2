@@ -17,6 +17,11 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "tabs-trigger": {
+          DEFAULT: "hsl(var(--tabs-trigger))",
+          foreground: "hsl(var(--tabs-trigger-foreground))",
+        },
+        "file-upload-border": "hsl(var(--file-upload-border))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

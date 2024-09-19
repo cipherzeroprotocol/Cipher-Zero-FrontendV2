@@ -1,4 +1,4 @@
-import DataManagement from "@/views/DataManagement";
+import FeatureTabs from "@/views/FeatureTabs";
 import WalletManagement from "@/views/WalletManagement";
 
 export default function Home() {
@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <div className="grid mt-8 grid-cols-12 grid-rows-2 gap-8">
         <div className="col-span-12 xl:col-span-8">
-          <DataManagement />
+          <FeatureTabs />
         </div>
         <div className="col-span-12 xl:col-span-4">
           <WalletManagement />
