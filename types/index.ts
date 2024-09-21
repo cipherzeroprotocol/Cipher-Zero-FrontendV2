@@ -1,15 +1,22 @@
 import { PublicKey } from '@solana/web3.js';
-
-
-interface CompressionResult {
-
-  compressedData: CompressedData;    // The compressed data in CompressedData format.
-
-  originalSize: number;              // The size of the original data before compression (in bytes).
-
-  compressedSize: number;            // The size of the compressed data (in bytes).
-
+export interface compressedData{
+  data: Buffer;
+  dataHash: string;
+  signature: string;
+  compressionType: string;
+  originalSize: number;
+  compressedSize: number;
+  timestamp: number;
+  metadata: Record<string, any>;
 }
+
+export interface CompressedAccountWithMerkleContext {
+  owner: PublicKey;
+  lamports: number;
+  address: PublicKey;
+  
+}
+
 
 // Define the MerkleProof interface
 export interface MerkleProof {
@@ -334,4 +341,15 @@ export interface ZKConnection {
 export interface IntegrityCheckResult {
   isValid: boolean;         // Indicates whether the integrity check passed or failed.
   message?: string;         // Optional message providing additional details about the integrity check.
+}
+
+
+export interface CompressionResult {
+
+  compressedData: CompressedData; // The compressed data in CompressedData format.
+
+  originalSize: number; // The size of the original data before compression (in bytes).
+
+  compressedSize: number; // The size of the compressed data (in bytes).
+
 }

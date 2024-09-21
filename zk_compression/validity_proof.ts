@@ -24,11 +24,29 @@ export class ValidityProof {
     const proof: ProofData = {
       a: [dataHash.slice(0, 32), dataHash.slice(32, 64)],
       b: [[dataHash.slice(64, 96), dataHash.slice(96, 128)], [dataHash.slice(128, 160), dataHash.slice(160, 192)]],
-      c: [dataHash.slice(192, 224), dataHash.slice(224)]
+      c: [dataHash.slice(192, 224), dataHash.slice(224)],
+      proof: {
+        leaf: '',
+        path: [],
+        indices: [],
+        root: '',
+        siblings: []
+      },
+      publicSignals: {
+        dataHash: '',
+        root: '',
+        nullifierHash: '',
+        externalNullifier: '',
+        signal: ''
+      }
     };
 
     const publicSignals: PublicSignals = {
-      dataHash: dataHash
+      dataHash: dataHash,
+      root: '',
+      nullifierHash: '',
+      externalNullifier: '',
+      signal: ''
     };
 
     logger.info('Validity proof generated successfully');

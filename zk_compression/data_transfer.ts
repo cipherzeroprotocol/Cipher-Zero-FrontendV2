@@ -11,8 +11,22 @@ import {
 import { ComputeBudgetProgram } from "@solana/web3.js";
 import dotenv from 'dotenv';
 import { BN } from 'bn.js';
-import { CompressedData } from "@/types";
+import { CompressedData, compressedData } from "@/types";
+import { CompressedAccountWithMerkleContext } from '@/types'; // Adjust the import path as necessary
 
+// Example values for the compressedData object
+const ownerPublicKey = new PublicKey('ExampleOwnerPublicKey');
+const addressPublicKey = new PublicKey('ExampleAddressPublicKey');
+const lamportsAmount = 1000000; // Example lamports amount
+
+const compressedData: CompressedAccountWithMerkleContext = {
+  owner: ownerPublicKey,
+  lamports: lamportsAmount,
+  address: addressPublicKey,
+  // Add other necessary fields if required
+};
+
+console.log(compressedData);
 dotenv.config();
 
 const RPC_ENDPOINT = process.env.RPC_ENDPOINT || "https://api.devnet.solana.com";
