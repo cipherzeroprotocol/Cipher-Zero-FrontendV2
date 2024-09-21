@@ -1,9 +1,36 @@
-import { create } from 'torrent-stream';
 import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '../utils/logger';
+import { create } from 'node:domain';
+// Removed import of 'create' from 'node:domain'
+
+var torrentStream = require('torrent-stream');
+
+var engine = torrentStream('magnet:my-magnet-link');
+
+engine.on('ready', function() {
+	engine.files.forEach(function(file: { name: any; createReadStream: () => any; }) {
+		console.log('filename:', file.name);
+		var stream = file.createReadStream();
+		// stream is readable stream to containing the file content
+	});
+});
+
+
+// get a stream containing bytes 10-100 inclusive.
+var stream = engine.files[0].createReadStream({
+  start: 10,
+  end: 100
+});
+
 
 export class BitTorrentManager {
+  initialize() {
+    throw new Error('Method not implemented.');
+  }
+  cleanup() {
+    throw new Error('Method not implemented.');
+  }
   private engine: any;
 
   constructor() {
@@ -18,7 +45,7 @@ export class BitTorrentManager {
       }
 
       const file = fs.createReadStream(filePath);
-      const torrent = create();
+      const torrent = torrentStream();
 
       this.engine = torrent;
       torrent.on('listening', () => {
@@ -45,7 +72,7 @@ export class BitTorrentManager {
         return reject(new Error('A download is already in progress'));
       }
 
-      this.engine = create(magnetURI);
+      this.engine = create();
 
       this.engine.on('ready', () => {
         logger.info('Download started...');

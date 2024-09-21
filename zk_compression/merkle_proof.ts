@@ -1,7 +1,6 @@
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { sha256 } from '@solana/web3.js/src/utils/sha256';
+import { sha256 } from 'ethers';  // Updated import
 import { logger } from '../utils/logger';
-import { performanceMonitor } from '../utils/performanceMonitor';
 import { MerkleProof } from '../types';
 
 export class SolanaMerkleTree {
@@ -16,7 +15,6 @@ export class SolanaMerkleTree {
     this.buildTree();
   }
 
-  @performanceMonitor
   private buildTree(): void {
     logger.debug('Building Solana Merkle tree...');
     while (this.layers[this.layers.length - 1].length > 1) {
@@ -41,24 +39,24 @@ export class SolanaMerkleTree {
   }
 
   private defaultHash(data: Buffer): Buffer {
-    return Buffer.from(sha256(data));
+    return Buffer.from(sha256(data).slice(2), 'hex');
   }
 
-  @performanceMonitor
   public getRoot(): Buffer {
     return this.layers[this.layers.length - 1][0];
   }
 
-  @performanceMonitor
   public getProof(index: number): MerkleProof {
     if (index < 0 || index >= this.leaves.length) {
       throw new Error('Leaf index out of bounds');
     }
 
     const proof: MerkleProof = {
-      leaf: this.leaves[index],
+      leaf: this.leaves[index].toString('hex'),
       path: [],
-      indices: []
+      indices: [],
+      root: '',
+      siblings: []
     };
 
     for (let i = 0; i < this.layers.length - 1; i++) {
@@ -66,7 +64,7 @@ export class SolanaMerkleTree {
       const siblingIndex = isRightNode ? index + 1 : index - 1;
 
       if (siblingIndex < this.layers[i].length) {
-        proof.path.push(this.layers[i][siblingIndex]);
+        proof.path.push(this.layers[i][siblingIndex].toString('hex'));
         proof.indices.push(isRightNode ? 1 : 0);
       }
 
@@ -76,12 +74,11 @@ export class SolanaMerkleTree {
     return proof;
   }
 
-  @performanceMonitor
   public verifyProof(proof: MerkleProof, root: Buffer): boolean {
-    let computedHash = proof.leaf;
+    let computedHash = Buffer.from(proof.leaf, 'hex');
 
     for (let i = 0; i < proof.path.length; i++) {
-      const proofElement = proof.path[i];
+      const proofElement = Buffer.from(proof.path[i], 'hex');
       if (proof.indices[i] === 0) {
         computedHash = this.hashPair(proofElement, computedHash);
       } else {
@@ -92,7 +89,6 @@ export class SolanaMerkleTree {
     return computedHash.equals(root);
   }
 
-  @performanceMonitor
   public updateLeaf(index: number, newLeaf: Buffer): void {
     if (index < 0 || index >= this.leaves.length) {
       throw new Error('Leaf index out of bounds');
@@ -131,7 +127,6 @@ export class SolanaMerkleTree {
     return this.layers.length - 1;
   }
 
-  // New method to create a Solana transaction for verifying a Merkle proof
   public createVerifyProofTransaction(
     programId: PublicKey,
     proof: MerkleProof,
@@ -143,10 +138,10 @@ export class SolanaMerkleTree {
       ],
       programId,
       data: Buffer.from([
-        ...proof.leaf,
-        ...Buffer.concat(proof.path),
-        ...Buffer.from(proof.indices),
-        ...root
+        ...Buffer.from(proof.leaf, 'hex'),
+        ...Buffer.concat(proof.path.map(p => Buffer.from(p, 'hex'))),
+        ...Array.from(new Uint8Array(proof.indices)),
+        ...Array.from(root)
       ])
     });
 
@@ -154,7 +149,6 @@ export class SolanaMerkleTree {
     return transaction;
   }
 
-  // New method to create a Solana transaction for updating the Merkle root
   public createUpdateRootTransaction(
     programId: PublicKey,
     newRoot: Buffer
@@ -164,7 +158,7 @@ export class SolanaMerkleTree {
         { pubkey: PublicKey.default, isSigner: false, isWritable: true }
       ],
       programId,
-      data: Buffer.from([...newRoot])
+      data: newRoot
     });
 
     const transaction = new Transaction().add(updateRootInstruction);

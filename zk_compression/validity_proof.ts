@@ -1,8 +1,7 @@
 import { PublicKey, Connection, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { sha256 } from 'crypto';
+import { sha256 } from 'ethers';
 import { ProofData, PublicSignals } from '../types';
 import { logger } from '../utils/logger';
-import { performanceMonitor } from '../utils/performanceMonitor';
 import { CIPHER_ZERO_PROGRAM_ID } from '../utils/constants';
 
 export class ValidityProof {
@@ -14,13 +13,13 @@ export class ValidityProof {
     this.programId = new PublicKey(CIPHER_ZERO_PROGRAM_ID);
   }
 
-  @performanceMonitor
+  
   public async generateProof(data: Buffer): Promise<{ proof: ProofData; publicSignals: PublicSignals }> {
     logger.info('Generating validity proof');
     
     // This is a placeholder implementation. In a real-world scenario,
     // you would use a ZK-SNARK library to generate the actual proof.
-    const dataHash = sha256(data).toString('hex');
+    const dataHash = sha256(data);
     
     const proof: ProofData = {
       a: [dataHash.slice(0, 32), dataHash.slice(32, 64)],
@@ -36,7 +35,7 @@ export class ValidityProof {
     return { proof, publicSignals };
   }
 
-  @performanceMonitor
+
   public async verifyProof(proof: ProofData, publicSignals: PublicSignals): Promise<boolean> {
     logger.info('Verifying validity proof');
 
@@ -68,7 +67,7 @@ export class ValidityProof {
     }
   }
 
-  @performanceMonitor
+
   public async createVerificationInstruction(proof: ProofData, publicSignals: PublicSignals): Promise<TransactionInstruction> {
     return new TransactionInstruction({
       keys: [],

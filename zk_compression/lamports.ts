@@ -1,48 +1,40 @@
-import dotenv from "dotenv";
-import {
-  LightSystemProgram,
-  buildAndSignTx,
-  createRpc,
-  defaultTestStateTreeAccounts,
-  sendAndConfirmTx,
-  confirmTx,
-} from "@lightprotocol/stateless.js";
-import { ComputeBudgetProgram, Keypair } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { buildAndSignTx, LightSystemProgram } from '@lightprotocol/stateless.js';
+import {CompressedData } from '../types';
 
-dotenv.config();
 
-const fromKeypair = Keypair.generate();
-
-// Set up connection to Solana network
-const connection = createRpc();  // Localnet by default; adjust for other networks as needed
-
-(async () => {
-  try {
-    // Airdrop lamports to cover transaction fees
-    await confirmTx(connection, await connection.requestAirdrop(fromKeypair.publicKey, 10e9));
-
-    // Fetch the latest blockhash
-    const { blockhash } = await connection.getLatestBlockhash();
-
-    // Create instruction to compress lamports to self
-    const compressInstruction = LightSystemProgram.compress({
-      payer: fromKeypair.publicKey,
-      toAddress: fromKeypair.publicKey,
-      lamports: 1_000_000_000,
-      outputStateTree: defaultTestStateTreeAccounts().merkleTree,
+export async function createCompressInstruction(data: Buffer, toAddress: PublicKey): Promise<TransactionInstruction> {
+    return LightSystemProgram.compress({
+        payer: toAddress,
+        lamports: data.length,
+        toAddress,
+        outputStateTree: new PublicKey(data),
     });
+}
 
-    // Build and sign the transaction with a compute budget program to increase unit limit
+async function main() {
+    const fromKeypair = Keypair.generate(); // Replace with your actual keypair
+    const blockhash = await getRecentBlockhash(); // Replace with your method to get the recent blockhash
+    const dataToCompress = Buffer.from('example data'); // Replace with your actual data
+
+    // Create the compress instruction
+    const compressInstruction = await createCompressInstruction(dataToCompress, fromKeypair.publicKey);
+
+    // Build and sign the transaction
     const transaction = buildAndSignTx(
-      [ComputeBudgetProgram.setComputeUnitLimit({ units: 1_200_000 }), compressInstruction],
-      fromKeypair,
-      blockhash
+        [await ComputeBudgetProgram.setComputeUnitLimit({ units: 1_200_000 }), compressInstruction],
+        fromKeypair,
+        blockhash,
+        []
     );
 
-    // Send the transaction and confirm its success
-    const transactionId = await sendAndConfirmTx(connection, transaction);
-    console.log("Transaction Signature:", transactionId);
-  } catch (error) {
-    console.error("Error during transaction:", error);
-  }
-})();
+    console.log('Transaction:', transaction);
+}
+
+// Replace with your actual method to get the recent blockhash
+async function getRecentBlockhash(): Promise<string> {
+    // Implement your logic to get the recent blockhash
+    return 'exampleBlockhash';
+}
+
+main().catch(console.error);

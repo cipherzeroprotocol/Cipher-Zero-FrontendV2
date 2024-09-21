@@ -40,6 +40,7 @@
     "snarkjs": "^0.7.4",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "torrent-stream": "^1.2.1",
     "web3-react-phantom": "^1.0.4",
     "zlib": "^1.0.5"
   },
@@ -50,6 +51,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/snarkjs": "^0.7.8",
+    "@types/torrent-stream": "^0.0.9",
     "eslint": "^8",
     "eslint-config-next": "14.2.9",
     "postcss": "^8",

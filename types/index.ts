@@ -1,18 +1,110 @@
 import { PublicKey } from '@solana/web3.js';
 
+
+interface CompressionResult {
+
+  compressedData: CompressedData;    // The compressed data in CompressedData format.
+
+  originalSize: number;              // The size of the original data before compression (in bytes).
+
+  compressedSize: number;            // The size of the compressed data (in bytes).
+
+}
+
+// Define the MerkleProof interface
+export interface MerkleProof {
+  leaf: string;  // hex string
+  path: string[];  // array of hex strings
+  indices: number[];
+}
+
+// Define the CompressedData interface
+export interface CompressedData {
+  data: Buffer;
+  dataHash: string;
+  signature: string;
+  compressionType: string;
+  originalSize: number;
+  compressedSize: number;
+  timestamp: number;
+  metadata: Record<string, any>;
+}
+
+// Define the ProofData interface
+export interface ProofData {
+  proof: MerkleProof;
+  publicSignals: PublicSignals;
+}
+
+// Define the PublicSignals interface
+export interface PublicSignals {
+  root: string;  // hex string
+  nullifierHash: string;  // hex string
+  externalNullifier: string;  // hex string
+  signal: string;  // hex string
+}
+
+// Define the CompressedFileData interface
+export interface CompressedFileData {
+  proof: ProofData;
+  publicSignals: PublicSignals;
+  // Add other necessary fields
+}
+
+// Define the TorrentInfo interface
+export interface TorrentInfo {
+  infoHash: string;
+  pieceLength: number;
+  // Add other necessary fields
+}
+
+export interface MerkleProof {
+  leaf: string;  // hex string
+  path: string[];  // array of hex strings
+  indices: number[];
+}
+
+
+// Define the CompressedData type
+export interface CompressedData {
+  [x: string]: number | string | Buffer | Record<string, any>;
+  data: Buffer;
+  dataHash: string;
+  signature: string;
+  compressionType: string;
+  originalSize: number;
+  compressedSize: number;
+  timestamp: number;
+  metadata: Record<string, any>;
+}
+
+// Example function that expects a CompressedData object
+function processCompressedData(compressedData: CompressedData): void {
+  console.log(`Processing compressed data with hash: ${compressedData.dataHash}`);
+  // Add your processing logic here
+}
+
+// Example usage
+const exampleCompressedData: CompressedData = {
+  data: Buffer.from('example data'),
+  dataHash: 'exampleHash',
+  signature: 'exampleSignature',
+  compressionType: 'gzip',
+  originalSize: 1024,
+  compressedSize: 512,
+  timestamp: Date.now(),
+  metadata: { exampleKey: 'exampleValue' }
+};
+
+processCompressedData(exampleCompressedData);
+
 // Basic types
 export type Address = PublicKey;
 export type Hash = string;
 export type Signature = string;
 
 // Compressed Data
-export interface CompressedData {
-  dataHash: Hash;
-  signature: Signature;
-  compressionType: CompressionType;
-  originalSize: number;
-  compressedSize: number;
-}
+
 
 // Proof Data
 export interface ProofData {
@@ -127,7 +219,7 @@ export interface MerkleProof {
   root: Hash;
   leaf: Hash;
   siblings: Hash[];
-  path: number[];
+  //path: number[];
 }
 
 // Transaction
@@ -197,15 +289,7 @@ export interface CipherZeroStats {
 }
 
 
-export interface CompressedData {
 
-  compressedData: Buffer;
-
-  proof: ProofData;
-
-  publicSignals: PublicSignals;
-
-}
 
 
 
@@ -217,14 +301,7 @@ export interface CompressionRequest {
   programId: string;     // The program ID of the ZK Compression API.
 }
 
-/**
-* Interface representing the result of a compression operation.
-*/
-export interface CompressionResult {
-  compressedData: string;    // The compressed data in string format.
-  originalSize: number;      // The size of the original data before compression (in bytes).
-  compressedSize: number;    // The size of the compressed data (in bytes).
-}
+
 
 /**
 * Interface representing a decompression request.
