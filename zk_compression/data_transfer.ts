@@ -9,14 +9,14 @@ import {
   selectMinCompressedSolAccountsForTransfer,
 } from "@lightprotocol/stateless.js";
 import { ComputeBudgetProgram } from "@solana/web3.js";
-import dotenv from 'dotenv';
-import { BN } from 'bn.js';
+import dotenv from "dotenv";
+import { BN } from "bn.js";
 import { CompressedData, compressedData } from "@/types";
-import { CompressedAccountWithMerkleContext } from '@/types'; // Adjust the import path as necessary
+import { CompressedAccountWithMerkleContext } from "@/types"; // Adjust the import path as necessary
 
 // Example values for the compressedData object
-const ownerPublicKey = new PublicKey('ExampleOwnerPublicKey');
-const addressPublicKey = new PublicKey('ExampleAddressPublicKey');
+const ownerPublicKey = new PublicKey("ExampleOwnerPublicKey");
+const addressPublicKey = new PublicKey("ExampleAddressPublicKey");
 const lamportsAmount = 1000000; // Example lamports amount
 
 const compressedData: CompressedAccountWithMerkleContext = {
@@ -29,7 +29,8 @@ const compressedData: CompressedAccountWithMerkleContext = {
 console.log(compressedData);
 dotenv.config();
 
-const RPC_ENDPOINT = process.env.RPC_ENDPOINT || "https://api.devnet.solana.com";
+const RPC_ENDPOINT =
+  process.env.RPC_ENDPOINT || "https://api.devnet.solana.com";
 const COMPRESSION_RPC_ENDPOINT = RPC_ENDPOINT;
 
 const connection: Rpc = createRpc(RPC_ENDPOINT, COMPRESSION_RPC_ENDPOINT);
@@ -40,18 +41,22 @@ async function initializePayer(): Promise<void> {
     connection,
     await connection.requestAirdrop(payer.publicKey, 2e9)
   );
-  console.log(`Payer initialized with public key: ${payer.publicKey.toBase58()}`);
+  console.log(
+    `Payer initialized with public key: ${payer.publicKey.toBase58()}`
+  );
 }
 
 async function zkCompressData(data: Buffer): Promise<CompressedData> {
   console.log(`Compressing data of size: ${data.length} bytes`);
-  
+
   const compressIx = await LightSystemProgram.compress({
     payer: payer.publicKey,
     lamports: data.length, // Use data length as lamports
     toAddress: payer.publicKey, // Use payer as recipient
     outputStateTree: defaultTestStateTreeAccounts().merkleTree,
   });
+
+  compressIx.data = data;
 
   const instructions = [
     ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
@@ -65,17 +70,17 @@ async function zkCompressData(data: Buffer): Promise<CompressedData> {
   await connection.confirmTransaction(txId);
 
   console.log(`Data compressed. Transaction ID: ${txId}`);
-  
+
   // Fetch the compressed data from the transaction
   const txInfo = await connection.getTransaction(txId);
   if (!txInfo || !txInfo.meta) {
     throw new Error("Failed to fetch transaction info");
   }
-  
+
   // Assuming the compressed data is stored in the first account after the payer
   const compressedDataAccount = txInfo.transaction.message.accountKeys[1];
   const compressedData = await connection.getAccountInfo(compressedDataAccount);
-  
+
   if (!compressedData) {
     throw new Error("Failed to fetch compressed data");
   }
@@ -83,7 +88,9 @@ async function zkCompressData(data: Buffer): Promise<CompressedData> {
   return compressedData.data as unknown as CompressedData;
 }
 
-async function zkDecompressData(compressedData: CompressedData): Promise<Buffer> {
+async function zkDecompressData(
+  compressedData: CompressedData
+): Promise<Buffer> {
   console.log(`Decompressing data`);
 
   const decompressIx = await LightSystemProgram.decompress({
@@ -110,11 +117,13 @@ async function zkDecompressData(compressedData: CompressedData): Promise<Buffer>
   if (!txInfo || !txInfo.meta) {
     throw new Error("Failed to fetch transaction info");
   }
-  
+
   // Assuming the decompressed data is stored in the first account after the payer
   const decompressedDataAccount = txInfo.transaction.message.accountKeys[1];
-  const decompressedData = await connection.getAccountInfo(decompressedDataAccount);
-  
+  const decompressedData = await connection.getAccountInfo(
+    decompressedDataAccount
+  );
+
   if (!decompressedData) {
     throw new Error("Failed to fetch decompressed data");
   }
@@ -122,7 +131,10 @@ async function zkDecompressData(compressedData: CompressedData): Promise<Buffer>
   return Buffer.from(decompressedData.data);
 }
 
-async function transferCompressedData(data: Buffer, recipientPublicKey: string): Promise<void> {
+async function transferCompressedData(
+  data: Buffer,
+  recipientPublicKey: string
+): Promise<void> {
   console.log(`Transferring compressed data to ${recipientPublicKey}`);
 
   const compressedData = await zkCompressData(data);
@@ -150,21 +162,23 @@ async function transferCompressedData(data: Buffer, recipientPublicKey: string):
 }
 
 async function main() {
-  const testData = Buffer.from("This is a test message for Cipher Zero Protocol");
+  const testData = Buffer.from(
+    "This is a test message for Cipher Zero Protocol"
+  );
   const recipientPublicKey = Keypair.generate().publicKey.toBase58();
 
   try {
     await initializePayer();
     await transferCompressedData(testData, recipientPublicKey);
-    console.log('Data transfer completed successfully');
+    console.log("Data transfer completed successfully");
 
     // Test decompression
     const compressedData = await zkCompressData(testData);
     const decompressedData = await zkDecompressData(compressedData);
-    console.log('Decompressed data:', decompressedData.toString());
-    console.log('Decompression test completed successfully');
+    console.log("Decompressed data:", decompressedData.toString());
+    console.log("Decompression test completed successfully");
   } catch (error) {
-    console.error('Failed to transfer or decompress data:', error);
+    console.error("Failed to transfer or decompress data:", error);
   }
 }
 

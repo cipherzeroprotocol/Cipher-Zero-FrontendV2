@@ -1,24 +1,27 @@
 "use client";
 
-import useZkCompression from "@/hooks/useZkCompression";
-import { UploadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import crypto from "crypto-js";
-import pako from "pako";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { convertFileToBase64 } from "@/helpers/data-conversions";
 import { InputWithLabel } from "@/views/common/InputWithLabel";
 import TextAreaWithLabel from "@/views/common/TextAreaWithLabel";
 import MediaSendButton from "./MediaSendButton";
+import { useCompression } from "@/hooks/use-compression";
+import { Keypair } from "@solana/web3.js";
+import bs58 from "bs58";
 
-const encryptionKey = "ab!k@Lr";
+const secretKeyStr =
+  "LecBDkkrpWZWiokBwFFWavLWwgUaBDLc4ceAXFiV6VA33oMCdoXqs7mSp38z1Dyjac5pgeaJH2EF4z8ExnrSUgM";
+
+const toSecretKeyStr =
+  "3UdKLD8jEYf7V7eWTLbfyTT9xrS6zHn55bgx32zNiMjWzVr56RNehdSvDhKUMyYRUkKmMqASe6oZD54B8svpWpEE";
 
 export default function FileInput() {
   const inputFile = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileSrc, setFileSrc] = useState<string>("");
-  const { createConnection } = useZkCompression();
+  const { compressData, decompressData } = useCompression();
 
   const handleFileUpload = () => {
     inputFile.current?.click();
@@ -31,27 +34,6 @@ export default function FileInput() {
     setFile(file);
   };
 
-  const compressData = (data: string) => {
-    const compressedData = pako.deflate(data);
-    return compressedData;
-  };
-
-  const encrypData = async (data: string) => {
-    return crypto.AES.encrypt(data, encryptionKey).toString();
-  };
-
-  const decryptData = async (data: string): Promise<string | null> => {
-    try {
-      const decryptedData = crypto.AES.decrypt(data, encryptionKey).toString(
-        crypto.enc.Utf8
-      );
-      return decryptedData;
-    } catch (error) {
-      console.error("Failed to decrypt data:", error);
-      return null;
-    }
-  };
-
   const getFileSizeByMB = (file: File) => {
     return new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 2,
@@ -59,80 +41,72 @@ export default function FileInput() {
   };
 
   const onCompressFile = async (file: File) => {
-    console.log(file);
     const reader = new FileReader();
 
     if (file) {
+      reader.onload = async () => {
+        const data = reader.result as ArrayBuffer;
+        console.log(data);
+
+        // const dataBuffer = Buffer.from(data);
+
+        // const message = "Hello, World!";
+
+        // console.log(dataBuffer);
+
+        // const keypairArray = bs58.decode(secretKeyStr);
+        // const keypair = Keypair.fromSecretKey(new Uint8Array(keypairArray));
+
+        // const toKeypairArray = bs58.decode(toSecretKeyStr);
+        // const toKeypair = Keypair.fromSecretKey(new Uint8Array(toKeypairArray));
+
+        // await compressToken(keypair, toKeypair.publicKey);
+
+        // const compressedData = await compressData(
+        //   Buffer.from(message),
+        //   keypair,
+        //   toKeypair.publicKey
+        // );
+
+        // const decompressedData = await decompressData(
+        //   compressedData,
+        //   toKeypair
+        // );
+
+        // console.log(decompressedData);
+
+        const base64Data = await convertFileToBase64(file);
+        setFileSrc(base64Data);
+      };
+
       reader.readAsArrayBuffer(file);
-      console.log("File type: ", file.type);
-
-      const base64FileData = await convertFileToBase64(file);
-      const encryptedData = await encrypData(base64FileData);
-
-      if (encryptedData) {
-        console.log("Encrypted Data: ", encryptedData);
-        const compressedData = compressData(encryptedData);
-        console.log("Compressed Data: ", compressedData);
-
-        // const compressedDataStr = new TextDecoder().decode(compressedData);
-
-        // generateProof(compressedDataStr);
-
-        const sizeInMB = new Blob([compressedData]).size / 1024 ** 2;
-        console.log("Size in MB: ", sizeInMB);
-
-        const decompressedData = pako.inflate(compressedData, {
-          to: "string",
-        });
-
-        console.log("Decompressed Data: ", decompressedData);
-
-        console.log("Decompressed Data (Base64): ", decompressedData);
-
-        // Decrypt the decompressed data (which should be the encrypted base64 string)
-        const decryptedBase64 = await decryptData(decompressedData);
-        console.log("Decrypted Data (Base64): ", decryptedBase64);
-
-        setFileSrc(decryptedBase64 || "");
-      }
     }
   };
-
-  // const generateFileSrc = async (file: File | null) => {
-  //   if (file === null) {
-  //     return "";
-  //   }
-  //   const base64FileData = await convertFileToBase64(file);
-
-  //   if (base64FileData) {
-  //     setFileSrc(base64FileData);
-  //   }
-  // };
 
   useEffect(() => {
     if (file) {
       onCompressFile(file);
-      // generateFileSrc(file);
     }
   }, [file]);
 
-  useEffect(() => {
-    createConnection();
-  }, []);
-
   return (
     <div className="flex flex-col gap-8 ">
-      <div
-        className="border-2 border-dashed border-file-upload-border rounded-lg p-12 mt-6 text-center cursor-pointer"
-        onClick={handleFileUpload}
-      >
-        <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
+      <div className="cursor-pointer mt-6" onClick={handleFileUpload}>
+        <Image
+          src="/images/file-choose-bg.png"
+          alt="file-choose"
+          sizes="100vw"
+          style={{ width: "100%", height: "auto" }}
+          width={0}
+          height={0}
+        />
+        {/* <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
         <div>
           <p className="font-semibold text-lg text-gray-600 dark:text-gray-400">
             Drag and drop files here or{" "}
             <span className="text-primary underline">click to upload</span>
           </p>
-        </div>
+        </div> */}
         <input
           type="file"
           ref={inputFile}
@@ -147,7 +121,7 @@ export default function FileInput() {
               <DialogTrigger>
                 <Image src={fileSrc} alt="File" width={64} height={64} />
               </DialogTrigger>
-              <DialogContent className="bg-white min-w-full">
+              <DialogContent className="h-screen max-w-screen-sm">
                 <div className="p-4">
                   <Image
                     width={0}

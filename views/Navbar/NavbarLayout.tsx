@@ -3,5 +3,5 @@ export default function NavbarLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <nav className="border-b">{children}</nav>;
+  return <nav>{children}</nav>;
 }

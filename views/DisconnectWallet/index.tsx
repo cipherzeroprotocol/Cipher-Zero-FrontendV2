@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import copyToClipboard from "@/helpers/copyToClipboard";
 import { useWallet } from "@/hooks/useWallet";
+import { ChevronDown, CopyIcon, LogOutIcon } from "lucide-react";
 
 export default function DisconnectWallet() {
   const { disconnectWallet, publicKey } = useWallet();
@@ -29,19 +30,29 @@ export default function DisconnectWallet() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          className="flex gap-2 bg-card hover:bg-tabs-trigger border-tabs-trigger rounded-xl"
+        >
           {publicKey ? formatPublicKey(publicKey) : "No address"}
+          <ChevronDown size={16} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleDisconnect}>
-            Disconnect
+      <DropdownMenuContent className="w-56 bg-card">
+        <DropdownMenuGroup className="space-y-2">
+          <DropdownMenuItem
+            onClick={handleDisconnect}
+            className="focus:bg-tabs-trigger space-x-2"
+          >
+            <LogOutIcon />
+            <span className="font-semibold">Disconnect</span>
           </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleCopyAddress}>
-            Copy address
+          <DropdownMenuItem
+            onClick={handleCopyAddress}
+            className="focus:bg-tabs-trigger space-x-2"
+          >
+            <CopyIcon />
+            <span className="font-semibold">Copy address</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

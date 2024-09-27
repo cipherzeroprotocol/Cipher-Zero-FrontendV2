@@ -18,7 +18,7 @@ export default function ConnectWalletPage() {
           </CardTitle>
           <CardDescription>Connect your wallet to get started</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8">
           <ConnectWallet />
         </CardContent>
         <CardFooter className="flex justify-center">

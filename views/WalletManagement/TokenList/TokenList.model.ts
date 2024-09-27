@@ -1,4 +1,4 @@
-export interface AssetListItem {
+export interface ITokenListItem {
   key: string;
   name: string;
   symbol: string;

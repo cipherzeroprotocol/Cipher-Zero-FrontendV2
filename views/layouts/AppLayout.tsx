@@ -1,5 +1,6 @@
 "use client";
 
+import { Toaster } from "@/components/ui/toaster";
 import { useWallet } from "@/hooks/useWallet";
 import useZkCompression from "@/hooks/useZkCompression";
 import { useEffect } from "react";
@@ -16,5 +17,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster />
+    </>
+  );
 }

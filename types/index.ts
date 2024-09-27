@@ -1,5 +1,5 @@
-import { PublicKey } from '@solana/web3.js';
-export interface compressedData{
+import { PublicKey } from "@solana/web3.js";
+export interface compressedData {
   data: Buffer;
   dataHash: string;
   signature: string;
@@ -14,14 +14,12 @@ export interface CompressedAccountWithMerkleContext {
   owner: PublicKey;
   lamports: number;
   address: PublicKey;
-  
 }
-
 
 // Define the MerkleProof interface
 export interface MerkleProof {
-  leaf: string;  // hex string
-  path: string[];  // array of hex strings
+  leaf: string; // hex string
+  path: string[]; // array of hex strings
   indices: number[];
 }
 
@@ -35,6 +33,7 @@ export interface CompressedData {
   compressedSize: number;
   timestamp: number;
   metadata: Record<string, any>;
+  txId: string;
 }
 
 // Define the ProofData interface
@@ -45,10 +44,10 @@ export interface ProofData {
 
 // Define the PublicSignals interface
 export interface PublicSignals {
-  root: string;  // hex string
-  nullifierHash: string;  // hex string
-  externalNullifier: string;  // hex string
-  signal: string;  // hex string
+  root: string; // hex string
+  nullifierHash: string; // hex string
+  externalNullifier: string; // hex string
+  signal: string; // hex string
 }
 
 // Define the CompressedFileData interface
@@ -66,11 +65,10 @@ export interface TorrentInfo {
 }
 
 export interface MerkleProof {
-  leaf: string;  // hex string
-  path: string[];  // array of hex strings
+  leaf: string; // hex string
+  path: string[]; // array of hex strings
   indices: number[];
 }
-
 
 // Define the CompressedData type
 export interface CompressedData {
@@ -87,23 +85,25 @@ export interface CompressedData {
 
 // Example function that expects a CompressedData object
 function processCompressedData(compressedData: CompressedData): void {
-  console.log(`Processing compressed data with hash: ${compressedData.dataHash}`);
+  console.log(
+    `Processing compressed data with hash: ${compressedData.dataHash}`
+  );
   // Add your processing logic here
 }
 
 // Example usage
-const exampleCompressedData: CompressedData = {
-  data: Buffer.from('example data'),
-  dataHash: 'exampleHash',
-  signature: 'exampleSignature',
-  compressionType: 'gzip',
-  originalSize: 1024,
-  compressedSize: 512,
-  timestamp: Date.now(),
-  metadata: { exampleKey: 'exampleValue' }
-};
+// const exampleCompressedData: CompressedData = {
+//   data: Buffer.from("example data"),
+//   dataHash: "exampleHash",
+//   signature: "exampleSignature",
+//   compressionType: "gzip",
+//   originalSize: 1024,
+//   compressedSize: 512,
+//   timestamp: Date.now(),
+//   metadata: { exampleKey: "exampleValue" },
+// };
 
-processCompressedData(exampleCompressedData);
+// processCompressedData(exampleCompressedData);
 
 // Basic types
 export type Address = PublicKey;
@@ -111,7 +111,6 @@ export type Hash = string;
 export type Signature = string;
 
 // Compressed Data
-
 
 // Proof Data
 export interface ProofData {
@@ -126,11 +125,11 @@ export interface PublicSignals {
 
 // File Types
 export enum FileType {
-  Document = 'document',
-  Image = 'image',
-  Video = 'video',
-  Audio = 'audio',
-  Other = 'other'
+  Document = "document",
+  Image = "image",
+  Video = "video",
+  Audio = "audio",
+  Other = "other",
 }
 
 export interface FileMetadata {
@@ -183,8 +182,8 @@ export interface CompressedAudio extends CompressedFile {
 
 // Cryptocurrency
 export enum TokenType {
-  Native = 'native',
-  SPL = 'spl',
+  Native = "native",
+  SPL = "spl",
 }
 
 export interface TokenMetadata {
@@ -209,9 +208,9 @@ export interface TokenTransfer {
 
 // Compression
 export enum CompressionType {
-  ZLib = 'zlib',
-  LZMA = 'lzma',
-  Custom = 'custom'
+  ZLib = "zlib",
+  LZMA = "lzma",
+  Custom = "custom",
 }
 
 export interface CompressionStats {
@@ -295,61 +294,51 @@ export interface CipherZeroStats {
   averageCompressionRatio: number;
 }
 
-
-
-
-
-
 /**
  * Interface representing a compression request.
  */
 export interface CompressionRequest {
-  data: any;             // The data to be compressed.
-  programId: string;     // The program ID of the ZK Compression API.
+  data: any; // The data to be compressed.
+  programId: string; // The program ID of the ZK Compression API.
 }
 
-
-
 /**
-* Interface representing a decompression request.
-*/
+ * Interface representing a decompression request.
+ */
 export interface DecompressionRequest {
-  compressedData: string;    // The compressed data to be decompressed.
-  programId: string;         // The program ID of the ZK Compression API.
+  compressedData: string; // The compressed data to be decompressed.
+  programId: string; // The program ID of the ZK Compression API.
 }
 
 /**
-* Interface representing the connection configuration for the ZK Compression API.
-*/
+ * Interface representing the connection configuration for the ZK Compression API.
+ */
 export interface ZKConnectionConfig {
-  endpoint: string;          // The endpoint URL of the ZK Compression API.
-  apiKey: string;            // The API key for authenticating with the ZK Compression API.
-  timeout?: number;          // Optional timeout setting for the API requests (in milliseconds).
+  endpoint: string; // The endpoint URL of the ZK Compression API.
+  apiKey: string; // The API key for authenticating with the ZK Compression API.
+  timeout?: number; // Optional timeout setting for the API requests (in milliseconds).
 }
 
 /**
-* Interface representing a generic ZK Connection.
-*/
+ * Interface representing a generic ZK Connection.
+ */
 export interface ZKConnection {
-  compress: (request: CompressionRequest) => Promise<string>;    // Method to perform data compression.
-  decompress: (compressedData: string) => Promise<string>;       // Method to perform data decompression.
+  compress: (request: CompressionRequest) => Promise<string>; // Method to perform data compression.
+  decompress: (compressedData: string) => Promise<string>; // Method to perform data decompression.
 }
 
 /**
-* Interface representing the result of an integrity check.
-*/
+ * Interface representing the result of an integrity check.
+ */
 export interface IntegrityCheckResult {
-  isValid: boolean;         // Indicates whether the integrity check passed or failed.
-  message?: string;         // Optional message providing additional details about the integrity check.
+  isValid: boolean; // Indicates whether the integrity check passed or failed.
+  message?: string; // Optional message providing additional details about the integrity check.
 }
-
 
 export interface CompressionResult {
-
   compressedData: CompressedData; // The compressed data in CompressedData format.
 
   originalSize: number; // The size of the original data before compression (in bytes).
 
   compressedSize: number; // The size of the compressed data (in bytes).
-
 }
