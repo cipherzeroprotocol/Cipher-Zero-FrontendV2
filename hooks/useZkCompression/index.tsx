@@ -1,5 +1,5 @@
 import { createRpc, Rpc } from "@lightprotocol/stateless.js";
-import { RPC_ENDPOINT } from "./constants";
+import { RPC_ENDPOINT } from "../common/constants";
 import { useEffect, useState } from "react";
 
 const COMPRESSION_RPC_ENDPOINT = RPC_ENDPOINT;

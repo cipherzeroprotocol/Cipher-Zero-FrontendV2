@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ReceivedFilesManagement from "../ReceivedFilesManagement";
 import useFeatureTabsLogic from "./FeatureTabs.logic";
 import DataTransfer from "../DataTransfer";
 import MessageTransfer from "../MessageTransfer";

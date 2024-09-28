@@ -24,21 +24,6 @@ export default function DataTransfer() {
           <MediaTransfer />
         </TabsContent>
       </Tabs>
-      {/* <div className="flex flex-col gap-4">
-        <div className="mt-6 flex flex-col gap-3">
-          <Input placeholder="Recipient's address" />
-        </div>
-        <FileInput />
-        <div className="flex items-center space-x-2">
-          <Input type="checkbox" id="encrypt" className="w-4 h-4 ml-1" />
-          <label htmlFor="encrypt" className="text-sm">
-            Encrypt data
-          </label>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button>Send File</Button>
-        </div>
-      </div> */}
     </>
   );
 }

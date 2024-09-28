@@ -11,13 +11,7 @@ import {
 } from "@lightprotocol/stateless.js";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { CompressedTokenProgram } from "@lightprotocol/compressed-token";
-
-// const rpcBaseUrl = process.env.NEXT_PUBLIC_RPC_BASE_URL;
-// const rpcApiKey = process.env.NEXT_PUBLIC_RPC_API_KEY;
-
-// const RPC_ENDPOINT = `${rpcBaseUrl}=${rpcApiKey}`;
-
-const RPC_ENDPOINT = "https://api.devnet.solana.com";
+import { RPC_ENDPOINT } from "./common/constants";
 
 const COMPRESSION_RPC_ENDPOINT = RPC_ENDPOINT;
 const connection: Rpc = createRpc(RPC_ENDPOINT, COMPRESSION_RPC_ENDPOINT);

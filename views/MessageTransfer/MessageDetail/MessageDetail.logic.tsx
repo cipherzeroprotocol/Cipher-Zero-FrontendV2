@@ -5,17 +5,17 @@ const useMessageDetailLogic = () => {
   const messageDetailList: IMessageDetail[] = useMemo(() => {
     return [
       {
-        owner: "HVq52Jz298opwi1BKUKo4qbkBR7ZWrfRWwBkPq2KNvy8",
+        owner: "7qtcjkvwj9YMgCYKvJzDB6iJNwEoxLhbjDQrnGmjjYff",
         message: "Hello",
         passedTime: "2 hour",
       },
       {
-        owner: "BzzWi5EZdqLbw9GH5UxsKx7SXCwJ7RVyX4JQYfSbpXqG",
+        owner: "7qtcjkvwj9YMgCYKvJzDB6iJNwEoxLhbjDQrnGmjjYff",
         message: "Hi",
         passedTime: "2 hour",
       },
       {
-        owner: "HVq52Jz298opwi1BKUKo4qbkBR7ZWrfRWwBkPq2KNvy8",
+        owner: "7qtcjkvwj9YMgCYKvJzDB6iJNwEoxLhbjDQrnGmjjYff",
         message: "What's up?",
         passedTime: "2 hour",
       },
