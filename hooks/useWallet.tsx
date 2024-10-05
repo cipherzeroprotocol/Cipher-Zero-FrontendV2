@@ -8,10 +8,15 @@ import { useToast } from "./use-toast";
 
 export type AvailableChains = "solana" | "ethereum";
 
+export type WalletProvider = "phantom" | "solflare";
+
 interface WalletHookReturnType {
   isConnecting: boolean;
   isConnected: boolean;
-  connectWallet: (chain: AvailableChains) => void;
+  connectWallet: (
+    chain: AvailableChains,
+    walletProvider: WalletProvider
+  ) => void;
   disconnectWallet: () => void;
   publicKey: string | null;
 }
@@ -30,7 +35,7 @@ export const useWallet = (): WalletHookReturnType => {
     return !!hasPublicKey;
   };
 
-  const connectSolanaAccount = async () => {
+  const connectToPhantom = async () => {
     if (provider && provider.isPhantom) {
       try {
         const response = await provider.connect();
@@ -49,10 +54,40 @@ export const useWallet = (): WalletHookReturnType => {
     }
   };
 
-  const connectWallet = async (chain: AvailableChains) => {
+  const connectToSolflare = async () => {
+    const windowInstance = window as any;
+    if (windowInstance && windowInstance.solflare) {
+      try {
+        const isConnected = await windowInstance.solflare.connect();
+
+        if (isConnected && windowInstance.solflare.isConnected) {
+          const pubKey = windowInstance.solflare.publicKey;
+          saveToLocalStorage(accountAddressLocalStorageKey, pubKey.toString());
+          router.push("/");
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsConnecting(false);
+      }
+    }
+  };
+
+  const connectSolanaAccount = async (providerName: WalletProvider) => {
+    if (providerName === "phantom") {
+      connectToPhantom();
+    } else if (providerName === "solflare") {
+      connectToSolflare();
+    }
+  };
+
+  const connectWallet = async (
+    chain: AvailableChains,
+    walletProvider: WalletProvider
+  ) => {
     setIsConnecting(true);
     if (chain === "solana") {
-      await connectSolanaAccount();
+      await connectSolanaAccount(walletProvider);
     }
   };
 
@@ -78,9 +113,7 @@ export const useWallet = (): WalletHookReturnType => {
   useEffect(() => {
     if ("solana" in window) {
       const provider: any = window.solana;
-      if (provider && provider.isPhantom) {
-        setProvider(provider);
-      }
+      setProvider(provider);
     }
   }, []);
 
