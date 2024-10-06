@@ -12,6 +12,7 @@ import copyToClipboard from "@/helpers/copyToClipboard";
 import useTransaction from "@/hooks/use-transaction";
 import { useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
+import { useRouter } from "next/navigation";
 
 //const fromSecretKeyStr =
 //   "LecBDkkrpWZWiokBwFFWavLWwgUaBDLc4ceAXFiV6VA33oMCdoXqs7mSp38z1Dyjac5pgeaJH2EF4z8ExnrSUgM";
@@ -23,13 +24,15 @@ export default function MessageDetail({
   handleGoBack,
 }: IMessageDetailProps) {
   const { messageDetailList } = useMessageDetailLogic();
-  const { publicKey } = useWallet();
+  const { publicKey, walletProvider } = useWallet();
   // const { compressData } = useCompression();
   const [message, setMessage] = useState<string>("");
 
-  const { sendMessage, receiveMessages } = useTransaction();
+  const { sendMessage } = useTransaction();
 
   const { toast } = useToast();
+
+  const router = useRouter();
 
   const handleCopyTransactionId = (txId: string) => {
     copyToClipboard(txId);
@@ -41,9 +44,19 @@ export default function MessageDetail({
         return;
       }
 
+      if (!walletProvider) {
+        toast({
+          title: "Connect Wallet",
+          description:
+            "Wallet connection not found! Please connect your wallet to send a message.",
+          duration: 5000,
+        });
+        router.push("/connect-wallet");
+      }
+
       const to: PublicKey = new PublicKey(selectedAccount);
 
-      const txId = await sendMessage(message, to);
+      const txId = await sendMessage(message, to, walletProvider);
 
       if (txId) {
         toast({
@@ -74,7 +87,7 @@ export default function MessageDetail({
       if (selectedAccount && publicKey) {
         const own: PublicKey = new PublicKey(publicKey);
         const to: PublicKey = new PublicKey(selectedAccount);
-        receiveMessages(own, to);
+        // receiveMessages(own, to);
       }
     } catch (error) {
       console.error("Failed to receive message:", error);

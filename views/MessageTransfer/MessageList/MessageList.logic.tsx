@@ -7,7 +7,7 @@ const useMessageListLogic = ({
   const messageList: IMessageItem[] = useMemo(() => {
     const messageList = [
       {
-        publicKey: "7qtcjkvwj9YMgCYKvJzDB6iJNwEoxLhbjDQrnGmjjYff",
+        publicKey: "AXARBhku9SXaz5SHCZqDq3yeNT1yyALN45gPXrfFJDf2",
         lastMessage: "Hello",
         lastMessageDate: "2021-09-01T14:00:00",
         unreadMessages: 0,

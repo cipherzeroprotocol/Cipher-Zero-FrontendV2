@@ -1,61 +1,98 @@
 import {
   Connection,
-  Keypair,
   PublicKey,
-  sendAndConfirmTransaction,
+  SystemProgram,
   Transaction,
+  TransactionConfirmationStrategy,
   TransactionInstruction,
 } from "@solana/web3.js";
-
 import bs58 from "bs58";
 import { useEffect, useState } from "react";
-import { RPC_ENDPOINT } from "./common/constants";
 import {
   defaultTestStateTreeAccounts,
   LightSystemProgram,
 } from "@lightprotocol/stateless.js";
 import { getConnection } from "@/helpers/get-connection";
+import { getFromLocalStorage } from "@/helpers/localStorageHelper";
+import { useRouter } from "next/navigation";
+import { RPC_ENDPOINT } from "./common/constants";
 
-const mockSecretKeyFrom =
-  "5XPxT2ZiaNL4K1DtE43TBYNd7vWwX4y9oMnMGCfxVCWhm9KuaViAkx3FqRhoUSZBnWQGLUEhxpVVJ2K5Auvz3tKN";
-// const mockSecretKeyTo =
-//   "5XPxT2ZiaNL4K1DtE43TBYNd7vWwX4y9oMnMGCfxVCWhm9KuaViAkx3FqRhoUSZBnWQGLUEhxpVVJ2K5Auvz3tKN";
-
-const fromKeypairArray = bs58.decode(mockSecretKeyFrom);
-// const toKeypairArray = bs58.decode(mockSecretKeyTo);
+const accountAddressLocalStorageKey = "cipher-zero-account-info";
 
 const memoProgramId = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
 const useTransaction = () => {
-  // const [connection, setConnection] = useState<Connection | null>(null);
-  const [from, setFrom] = useState<Keypair | null>(null);
-  // const [to, setTo] = useState<Keypair | null>(null);
+  const [listenerSubscription, setListenerSubscription] = useState<
+    number | null
+  >(null);
+  const router = useRouter();
 
-  const sendMessage = async (message: string, to: PublicKey) => {
+  const getCurrentProvider = () => {
+    const accountInfo: any = getFromLocalStorage(accountAddressLocalStorageKey);
+
+    if (accountInfo && accountInfo.publicKey && accountInfo.providerName) {
+      if (accountInfo.providerName === "phantom") {
+        if (window && "solana" in window) {
+          const solanaGlobal: any = window.solana;
+          if (solanaGlobal && solanaGlobal.isPhantom) {
+            return solanaGlobal;
+          }
+        }
+      } else if (accountInfo.providerName === "solflare") {
+        if (window && "solflare" in window) {
+          const solflareGlobal: any = window.solflare;
+          if (solflareGlobal) {
+            return solflareGlobal;
+          }
+        }
+      }
+
+      return null;
+    } else {
+      router.push("/connect-wallet");
+    }
+  };
+
+  const sendMessage = async (
+    message: string,
+    to: PublicKey,
+    walletProvider: any
+  ) => {
     try {
+      console.log("Sending message to: ", to.toBase58());
       const connection = getConnection();
       if (!connection) throw new Error("Connection not established");
 
-      if (!from || !to) throw new Error("Keypairs not initialized");
+      if (!walletProvider) throw new Error("Wallet provider not found");
+
+      if (!to) throw new Error("Recipient not found");
 
       const lamportsToSend = 15_000;
 
       const ix = await LightSystemProgram.compress({
-        payer: from.publicKey,
+        payer: walletProvider.publicKey,
         toAddress: to,
         lamports: lamportsToSend,
         outputStateTree: defaultTestStateTreeAccounts().merkleTree,
+      });
+
+      const systemProgram = SystemProgram.transfer({
+        fromPubkey: walletProvider.publicKey,
+        toPubkey: to,
+        lamports: lamportsToSend,
       });
 
       const newTransaction = new Transaction();
 
       newTransaction.add(ix);
 
+      newTransaction.add(systemProgram);
+
       const transactionInstruction2: TransactionInstruction =
         new TransactionInstruction({
           keys: [
             {
-              pubkey: from.publicKey,
+              pubkey: walletProvider.publicKey,
               isSigner: true,
               isWritable: true,
             },
@@ -67,15 +104,25 @@ const useTransaction = () => {
       // newTransaction.add(transactionInstruction1);
       newTransaction.add(transactionInstruction2);
 
-      const transactionSignature = await sendAndConfirmTransaction(
-        connection,
-        newTransaction,
-        [from]
-      );
+      const latestBlockhash = await connection.getLatestBlockhash();
 
-      return transactionSignature;
+      newTransaction.recentBlockhash = latestBlockhash.blockhash;
+      newTransaction.feePayer = walletProvider.publicKey;
+
+      const transactionSignature =
+        await walletProvider.signAndSendTransaction(newTransaction);
+
+      const strategy: TransactionConfirmationStrategy = {
+        signature: transactionSignature.signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      };
+
+      await connection.confirmTransaction(strategy);
+
+      return transactionSignature.signature;
     } catch (error) {
-      console.log("Failed to send message:", error);
+      console.error("Failed to send message:", error);
       return null;
     }
   };
@@ -94,144 +141,137 @@ const useTransaction = () => {
       message: string;
       signature: string;
     }[] = [];
-    console.log("Own: ", own.toBase58());
-    console.log("To: ", to.toBase58());
-    console.log("Signature: ", signatures);
 
-    signatures.forEach(async ({ signature }) => {
-      if (signatures.length > 0) {
-        const transactionDetails = await connection.getTransaction(signature);
+    console.log("Signatures: ", signatures);
+    console.log(memoMessages);
 
-        if (!transactionDetails) {
-          throw new Error("Failed to fetch transaction details");
-        }
+    // signatures.forEach(async ({ signature }) => {
+    //   if (signatures.length > 0) {
+    //     const transactionDetails = await connection.getTransaction(signature);
 
-        const memoInstruction =
-          transactionDetails.transaction.message.instructions.find(
-            (instruction) => {
-              const programId =
-                transactionDetails.transaction.message.accountKeys[
-                  instruction.programIdIndex
-                ];
-              return programId.equals(new PublicKey(memoProgramId));
+    //     if (!transactionDetails) {
+    //       throw new Error("Failed to fetch transaction details");
+    //     }
+
+    //     const memoInstruction =
+    //       transactionDetails.transaction.message.instructions.find(
+    //         (instruction) => {
+    //           const programId =
+    //             transactionDetails.transaction.message.accountKeys[
+    //               instruction.programIdIndex
+    //             ];
+    //           return programId.equals(new PublicKey(memoProgramId));
+    //         }
+    //       );
+
+    //     if (!memoInstruction) {
+    //       throw new Error("No memo instruction found");
+    //     }
+
+    //     const senderIndex = memoInstruction.accounts[0];
+    //     const senderPublicKey =
+    //       transactionDetails.transaction.message.accountKeys[senderIndex];
+
+    //     console.log("Sender Public Key: ", senderPublicKey.toBase58());
+
+    //     // console.log("---------------------------------------------");
+    //     // console.log("Sender Public Key: ", senderPublicKey.toBase58());
+    //     // console.log("Memo Message: ", memoMessage);
+    //     // console.log("---------------------------------------------");
+
+    //     console.log(memoMessages);
+
+    //     return memoMessages;
+    //   }
+    // });
+  };
+
+  const setListenerForPhantom = async (
+    phantomProvider: any,
+    connection: Connection
+  ) => {
+    if (phantomProvider && phantomProvider.publicKey) {
+      const subId = connection.onAccountChange(
+        phantomProvider.publicKey,
+        async () => {
+          const signatures = await connection.getSignaturesForAddress(
+            phantomProvider.publicKey,
+            {
+              limit: 1,
             }
           );
 
-        if (!memoInstruction) {
-          throw new Error("No memo instruction found");
-        }
+          if (signatures && signatures.length > 0) {
+            signatures.forEach(async ({ signature }) => {
+              const transactionDetails =
+                await connection.getTransaction(signature);
 
-        const senderIndex = memoInstruction.accounts[0];
-        const senderPublicKey =
-          transactionDetails.transaction.message.accountKeys[senderIndex];
+              if (!transactionDetails) {
+                throw new Error("Failed to fetch transaction details");
+              }
 
-        const recipientIndex = memoInstruction.accounts[1];
-        const recipientPublicKey =
-          transactionDetails.transaction.message.accountKeys[recipientIndex];
+              const memoInstruction =
+                transactionDetails.transaction.message.instructions.find(
+                  (instruction) => {
+                    const programId =
+                      transactionDetails.transaction.message.accountKeys[
+                        instruction.programIdIndex
+                      ];
+                    return programId.equals(new PublicKey(memoProgramId));
+                  }
+                );
 
-        if (
-          (senderPublicKey.equals(own) && recipientPublicKey.equals(to)) ||
-          (senderPublicKey.equals(to) && recipientPublicKey.equals(own))
-        ) {
-          const memoData = memoInstruction.data;
-          const memoMessage = new TextDecoder("utf-8").decode(
-            bs58.decode(memoData)
-          );
+              if (!memoInstruction) {
+                throw new Error("No memo instruction found");
+              }
 
-          memoMessages.push({
-            sender: senderPublicKey.toBase58(),
-            recipient: recipientPublicKey.toBase58(),
-            message: memoMessage,
-            signature,
-          });
-        }
+              const senderIndex = memoInstruction.accounts[0];
+              const senderPublicKey =
+                transactionDetails.transaction.message.accountKeys[senderIndex];
 
-        // console.log("---------------------------------------------");
-        // console.log("Sender Public Key: ", senderPublicKey.toBase58());
-        // console.log("Memo Message: ", memoMessage);
-        // console.log("---------------------------------------------");
+              const memoData = memoInstruction.data;
+              const memoMessage = new TextDecoder("utf-8").decode(
+                bs58.decode(memoData)
+              );
 
-        console.log(memoMessages);
-
-        return memoMessages;
-      }
-    });
-  };
-
-  const listenForAccountChanges = (
-    connection: Connection,
-    toAccount: Keypair
-  ) => {
-    console.log("Listening for account changes...");
-
-    const subId = connection.onAccountChange(toAccount.publicKey, async () => {
-      const signatures = await connection.getSignaturesForAddress(
-        toAccount.publicKey,
-        {
-          limit: 2,
+              console.log("---------------------------------------------");
+              console.log("Sender Public Key: ", senderPublicKey.toBase58());
+              console.log("Memo Message: ", memoMessage);
+              console.log("---------------------------------------------");
+            });
+          }
         }
       );
 
-      signatures.forEach(async ({ signature }) => {
-        if (signatures.length > 0) {
-          const transactionDetails = await connection.getTransaction(signature);
+      setListenerSubscription(subId);
+    }
+  };
 
-          if (!transactionDetails) {
-            throw new Error("Failed to fetch transaction details");
-          }
+  const setListenerForSolflare = async (
+    solflareProvider: any,
+    connection: Connection
+  ) => {};
 
-          const memoInstruction =
-            transactionDetails.transaction.message.instructions.find(
-              (instruction) => {
-                const programId =
-                  transactionDetails.transaction.message.accountKeys[
-                    instruction.programIdIndex
-                  ];
-                return programId.equals(new PublicKey(memoProgramId));
-              }
-            );
-
-          if (!memoInstruction) {
-            throw new Error("No memo instruction found");
-          }
-
-          const memoData = memoInstruction.data;
-          const memoMessage = new TextDecoder("utf-8").decode(
-            bs58.decode(memoData)
-          );
-
-          const senderAccountIndex = memoInstruction.accounts[0];
-          const senderPublicKey =
-            transactionDetails.transaction.message.accountKeys[
-              senderAccountIndex
-            ];
-
-          console.log("---------------------------------------------");
-          console.log("Sender Public Key: ", senderPublicKey.toBase58());
-          console.log("Memo Message: ", memoMessage);
-          console.log("---------------------------------------------");
-        }
-      });
-    });
-
-    return subId;
+  const setInitialListener = (currentProvider: any, connection: Connection) => {
+    if (currentProvider && currentProvider.publicKey) {
+      if (currentProvider.isPhantom) {
+        setListenerForPhantom(currentProvider, connection);
+      } else if (currentProvider.providerName === "solflare") {
+        setListenerForSolflare(currentProvider, connection);
+      }
+    } else {
+      router.push("/connect-wallet");
+    }
   };
 
   useEffect(() => {
-    const newConnection = new Connection(RPC_ENDPOINT, "confirmed");
-
-    const fromAccount = Keypair.fromSecretKey(fromKeypairArray);
-    // const toAccount = Keypair.fromSecretKey(toKeypairArray);
-
-    setFrom(fromAccount);
-    // setTo(toAccount);
-
-    const subscriptionId = listenForAccountChanges(newConnection, fromAccount);
-
-    // setConnection(newConnection);
+    const connection = new Connection(RPC_ENDPOINT, "confirmed");
+    const currentProvider = getCurrentProvider();
+    setInitialListener(currentProvider, connection);
 
     return () => {
-      newConnection.removeAccountChangeListener(subscriptionId);
+      listenerSubscription &&
+        connection.removeAccountChangeListener(listenerSubscription);
     };
   }, []);
 

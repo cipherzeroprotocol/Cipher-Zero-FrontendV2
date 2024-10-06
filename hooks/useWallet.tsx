@@ -4,7 +4,6 @@ import {
 } from "@/helpers/localStorageHelper";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useToast } from "./use-toast";
 
 export type AvailableChains = "solana" | "ethereum";
 
@@ -19,57 +18,89 @@ interface WalletHookReturnType {
   ) => void;
   disconnectWallet: () => void;
   publicKey: string | null;
+  walletProvider: any;
 }
 
-const accountAddressLocalStorageKey = "cipher-zero-account-address";
+const accountAddressLocalStorageKey = "cipher-zero-account-info";
 
 export const useWallet = (): WalletHookReturnType => {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [provider, setProvider] = useState<any>(null);
+  const [phantomProvider, setPhantomProvider] = useState<any>(null);
+  const [solflareProvider, setSolflareProvider] = useState<any>(null);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const isConnected = () => {
-    const hasPublicKey = getFromLocalStorage(accountAddressLocalStorageKey);
-    return !!hasPublicKey;
+    const accountInfo: any = getFromLocalStorage(accountAddressLocalStorageKey);
+    return accountInfo && accountInfo.publicKey ? true : false;
+  };
+
+  const setInitialConnection = async (
+    phantomProviderInstance: any,
+    solflareProviderInstance: any
+  ) => {
+    const accountInfo: any = getFromLocalStorage(accountAddressLocalStorageKey);
+    if (
+      accountInfo &&
+      accountInfo.providerName === "phantom" &&
+      phantomProviderInstance
+    ) {
+      await phantomProviderInstance.connect();
+    } else if (
+      accountInfo &&
+      accountInfo.providerName === "solflare" &&
+      solflareProviderInstance
+    ) {
+      await solflareProviderInstance.connect();
+    } else {
+      router.push("/connect-wallet");
+    }
   };
 
   const connectToPhantom = async () => {
-    if (provider && provider.isPhantom) {
-      try {
-        const response = await provider.connect();
+    try {
+      if (phantomProvider) {
+        const response = await phantomProvider.connect();
         if (response) {
-          saveToLocalStorage(
-            accountAddressLocalStorageKey,
-            response.publicKey.toString()
-          );
+          const accountInfo = {
+            publicKey: response.publicKey.toString(),
+            providerName: "phantom",
+          };
+
+          saveToLocalStorage(accountAddressLocalStorageKey, accountInfo);
           router.push("/");
         }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsConnecting(false);
+      } else {
+        throw new Error("Phantom provider not found");
       }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsConnecting(false);
+      setSolflareProvider(null);
     }
   };
 
   const connectToSolflare = async () => {
-    const windowInstance = window as any;
-    if (windowInstance && windowInstance.solflare) {
-      try {
-        const isConnected = await windowInstance.solflare.connect();
+    try {
+      if (solflareProvider) {
+        const isConnected = await solflareProvider.connect();
 
-        if (isConnected && windowInstance.solflare.isConnected) {
-          const pubKey = windowInstance.solflare.publicKey;
-          saveToLocalStorage(accountAddressLocalStorageKey, pubKey.toString());
+        if (isConnected && solflareProvider.isConnected) {
+          const pubKey = solflareProvider.publicKey;
+          const accountInfo = {
+            publicKey: pubKey.toString(),
+            providerName: "solflare",
+          };
+          saveToLocalStorage(accountAddressLocalStorageKey, accountInfo);
           router.push("/");
         }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsConnecting(false);
       }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsConnecting(false);
+      setPhantomProvider(null);
     }
   };
 
@@ -92,41 +123,73 @@ export const useWallet = (): WalletHookReturnType => {
   };
 
   const disconnectWallet = async () => {
-    if (provider && provider.isPhantom) {
+    if (phantomProvider) {
       try {
-        await provider.disconnect();
+        await phantomProvider.disconnect();
         localStorage.removeItem(accountAddressLocalStorageKey);
         router.push("/connect-wallet");
       } catch (error) {
         console.error(error);
+      } finally {
+        setIsConnecting(false);
+      }
+    }
+
+    if (solflareProvider) {
+      try {
+        await solflareProvider.disconnect();
+        localStorage.removeItem(accountAddressLocalStorageKey);
+        router.push("/connect-wallet");
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsConnecting(false);
       }
     }
   };
 
+  const getCurrentProvider = () => {
+    const accountInfo: any = getFromLocalStorage(accountAddressLocalStorageKey);
+
+    if (accountInfo && accountInfo.providerName === "phantom") {
+      return phantomProvider;
+    } else if (accountInfo && accountInfo.providerName === "solflare") {
+      return solflareProvider;
+    }
+  };
+
   const getPublicKey = () => {
-    const publicKey = getFromLocalStorage(
+    const accountInfo: any = getFromLocalStorage(
       accountAddressLocalStorageKey
     ) as string;
-    return publicKey;
+    return accountInfo?.publicKey || null;
   };
 
   useEffect(() => {
-    if ("solana" in window) {
-      const provider: any = window.solana;
-      setProvider(provider);
-    }
-  }, []);
+    let phantomInstance: any = null;
+    let solflareInstance: any = null;
 
-  useEffect(() => {
-    if (!isConnected()) {
-      router.push("/connect-wallet");
-      toast({
-        title: "Please connect your wallet",
-        description: "You need to connect your wallet to continue",
-        variant: "destructive",
-      });
+    if (window && "solana" in window) {
+      const solanaGlobal: any = window.solana;
+      if (solanaGlobal && solanaGlobal.isPhantom) {
+        phantomInstance = solanaGlobal;
+      }
     }
-  }, [router, toast]);
+
+    if (window && "solflare" in window) {
+      const solflareGlobal: any = window.solflare;
+      if (solflareGlobal) {
+        solflareInstance = solflareGlobal;
+      }
+    }
+
+    if (phantomInstance || solflareInstance) {
+      setInitialConnection(phantomInstance, solflareInstance);
+    }
+
+    setPhantomProvider(phantomInstance);
+    setSolflareProvider(solflareInstance);
+  }, []);
 
   return {
     isConnecting,
@@ -134,5 +197,6 @@ export const useWallet = (): WalletHookReturnType => {
     connectWallet,
     disconnectWallet,
     publicKey: getPublicKey(),
+    walletProvider: getCurrentProvider(),
   };
 };
